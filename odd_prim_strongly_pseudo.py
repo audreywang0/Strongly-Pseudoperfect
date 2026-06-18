@@ -59,45 +59,39 @@ def check_value(number, lower_factor_list, goal_value, i=0, omitted_factors=None
 
    # Case 1: Goal reached
     if goal_value == 0:
-       return omitted_factors
+       return [omitted_factors]
 
 # too low
     if goal_value<0:
-        return False
+        return []
 
    # Case 2: No more factors to consider, failed
-    elif i == len(lower_factor_list):
-       return False
+    if i == len(lower_factor_list):
+       return []
 
 
    # Current factor and its corresponding pair
     factor = lower_factor_list[i]
-    factor_pair = number//lower_factor_list[i]
+    factor_pair = number//factor
 
+    all_solutions=[]
 
    # Choice 1: Omit factor pair
    # Subtract both values from goalValue
    # Add them to omittedFactors
     if factor!=factor_pair:
-       omit_factor = check_value(number, lower_factor_list, goal_value-factor -
-                           factor_pair, i+1, omitted_factors+[factor, factor_pair])
+       all_solutions += check_value(number, lower_factor_list, goal_value - factor - factor_pair, 
+                                    i+1, omitted_factors+[factor, factor_pair])
     else: # Perfect Square
-       omit_factor = check_value(number, lower_factor_list, goal_value-factor
-                               , i+1, omitted_factors+[factor, factor_pair])
+       all_solutions += check_value(number, lower_factor_list, goal_value-factor
+                               , i+1, omitted_factors+[factor])
 
 
    # Choice 2: Keep factor pair
    # Do not change goalValue or omittedFactors
-    keep_factor = check_value(number, lower_factor_list, goal_value, i+1, omitted_factors)
+    all_solutions += check_value(number, lower_factor_list, goal_value, i+1, omitted_factors)
 
-
-   # If either path succeeds, return list of omitted factors
-    if omit_factor != False:
-       return omit_factor
-    elif keep_factor != False:
-       return keep_factor
-    else:
-       return False # Both paths failed
+    return all_solutions
 
 def get_prime_factors(number):
     p=2
@@ -114,14 +108,14 @@ def get_prime_factors(number):
     return prime_factor_list
 
 
-for number in range(3, check_until, 2):
-    lower_factor_list = get_lower_factors(number)
+for num in range(3, check_until, 2):
+    lower_factor_list = get_lower_factors(num)
     if len(lower_factor_list)!=1: # num is not prime
-        prime_factor_list = get_prime_factors(number)
+        prime_factor_list = get_prime_factors(num)
         k=len(prime_factor_list)
         p=prime_factor_list[0]
         if p<=k:
-            proper_factor_list = get_proper_factors(number)
+            proper_factor_list = get_proper_factors(num)
             allDeficient = True
             for factor in proper_factor_list:
             #    if any factor is not deficient, changes allDeficient to false
@@ -133,24 +127,23 @@ for number in range(3, check_until, 2):
                 continue
             # at this point, all factors are deficient. now test if n is non-deficient.
             else:
-                num_is_deficient = test_deficient(number)
+                num_is_deficient = test_deficient(num)
                 #    n is non-deficient and all its factors are deficient. now test if n is pseudoperfect.
             if num_is_deficient==False:
-                factor_sum = sum_factors(number, lower_factor_list)
-                goal_value = factor_sum-(2*number)
-                result = check_value(number, lower_factor_list, goal_value, i=0)
-                if result != False:
-                    omitted_factors = result
-                    print("Number:", number)
+                factor_sum = sum_factors(num, lower_factor_list)
+                goal_value = factor_sum-(2*num)
+                results = check_value(num, lower_factor_list, goal_value, i=0)
+                if results:
+                    print("Number:", num)
                     print("Sum of factors:", factor_sum)
-                    if (omitted_factors == []):
-                        print("Omitted factors: None")
-                        print("Perfect number\n")
-                    else:
-                        print("Omitted factors: ", end="")
-                        for i in range(0, len(omitted_factors)-1, 2):
-                            print("(", omitted_factors[i], ",", number//(omitted_factors[i]), ")", sep="", end="")
-                        print("\n")
+                    print("Number of solutions:", len(results))
+                    for solution in results:
+                        if solution==[]:
+                            print("Omitted factors: None")
+                            print("Perfect number")
+                        else:
+                            print("Omitted factors:", solution)
+                    print("\n")
 
 
 
