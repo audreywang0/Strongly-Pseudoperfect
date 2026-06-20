@@ -1,108 +1,85 @@
-# // Strongly Pseudoperfect Numbers of the form 60*2^n
+# Strongly Pseudoperfect Numbers of the Form 60*2^n
 
-max_n = 3000
-
-def get_lower_factors(number):
-   lower_factor_list = []
-   for i in range(1, int(number**0.5)+1):
-       if number % i == 0:
-           lower_factor_list.append(i)
-   return lower_factor_list
+max_n = 200
 
 
-def sum_factors(number, lower_factor_list):
+def get_lower_divisors(number):
+    # Returns one lower divisor from each divisor pair
+    lower_divisors = []
+
+    for i in range(1, int(number**0.5) + 1):
+        if number % i == 0:
+            lower_divisors.append(i)
+
+    return lower_divisors
+
+
+def sigma(number, lower_divisors):
+    # Compute sum of all positive divisors of number
     total = 0
-    for factor in lower_factor_list:
-        pair = number // factor
-        if factor==pair:
-            total += factor
+    for divisor in lower_divisors:
+        pair = number // divisor
+        if divisor == pair:
+            total += divisor
         else:
-           total += factor + pair
+            total += divisor + pair
     return total
 
 
-def check_value(number, lower_factor_list, goal_value, i=0, omitted_factors=None):
-    if omitted_factors == None:
-       omitted_factors = [] # Initialize omittedFactors the first time the function runs (aka once for each number)
+def find_strongly_pseudo(number, lower_divisors, omission_target):
+    # Stores omitted divisor totals that are reachable so far
+    possible_totals = {0}
 
-   # Case 1: Goal reached
-    if goal_value == 0:
-       return [omitted_factors]
-   
-   # Case 2: Too low
-    if goal_value<0:
-        return []
+    for divisor in lower_divisors:
+        paired_divisor = number // divisor
 
-   # Case 3: No more factors to consider, failed
-    if i == len(lower_factor_list):
-       return []
+        # Sum contributed by omitting the divisor pair
+        if divisor == paired_divisor:  # Perfect square
+            pair_sum = divisor
+        else:
+            pair_sum = divisor + paired_divisor
 
-   # Current factor and its corresponding pair
-    factor = lower_factor_list[i]
-    factor_pair = number//factor
+        # Stores new totals made by omitting the current pair
+        new_totals = set()
 
-    all_solutions=[]
+        for old_total in possible_totals:
+            new_total = old_total + pair_sum
 
-   # Choice 1: Omit factor pair
-   # Subtract both values from goalValue
-   # Add them to omittedFactors
-    if factor!=factor_pair:
-       all_solutions += check_value(number, lower_factor_list, goal_value - factor - factor_pair, 
-                                    i+1, omitted_factors+[factor, factor_pair])
-    else: # Perfect Square
-       all_solutions += check_value(number, lower_factor_list, goal_value-factor
-                               , i+1, omitted_factors+[factor])
+            # Valid total found
+            if new_total == omission_target:
+                return True
 
-   # Choice 2: Keep factor pair
-   # Do not change goalValue or omittedFactors
-    all_solutions += check_value(number, lower_factor_list, goal_value, i+1, omitted_factors)
+            # Keep partial totals that have not passed the target
+            if new_total < omission_target:
+                new_totals.add(new_total)
 
-    return all_solutions
+        # Add totals made using the current pair
+        possible_totals = possible_totals | new_totals
+
+    # Check whether the target omission total was reachable
+    if omission_target in possible_totals:
+        return True
+    else:
+        return False
 
 
-def get_prime_factors(number):
-    p=2
-    prime_factor_list = []
-    while p<=number**0.5:
-        if number%p==0:
-            prime_factor_list.append(p)
-            while number%p==0:
-                number=number//p
-        p+=1
-        # adds last prime factor (remaining "number")
-    if number>1:
-        prime_factor_list.append(number)
-    return prime_factor_list
+for n in range(1, max_n + 1):
+    num = 60 * (2**n)
 
+    lower_divisors = get_lower_divisors(num)
 
-for n in range(1, max_n):
-    num = 60*(2**n)
+    # Skip primes
+    if len(lower_divisors) == 1:
+        continue
 
-    proceed=True
+    # Never 2 (mod 3)
+    if num % 3 == 2:
+        continue
 
-    prime_factor_list=get_prime_factors(num)
-    for prime_factor in prime_factor_list:
-        z=num//prime_factor
-        sigma_z=sum_factors(z, get_lower_factors(z))
-        if prime_factor>sigma_z:
-            proceed=False
-            break
-    if proceed==False:
-        continue # tests next number in the loop
-    
-    lower_factor_list = get_lower_factors(num)
-    factor_sum = sum_factors(num, lower_factor_list)
-    goal_value = factor_sum-(2*num)
-    
-    results = check_value(num, lower_factor_list, goal_value, i=0)
-    if results:
+    sigma_value = sigma(num, lower_divisors)
+
+    # Omitted pairs must sum to sigma(n)-2n
+    omission_target = sigma_value - (2 * num)
+
+    if find_strongly_pseudo(num, lower_divisors, omission_target):
         print("Number:", num)
-        print("Sum of factors:", factor_sum)
-        print("Number of solutions:", len(results))
-        for solution in results:
-            if solution==[]:
-                print("Omitted factors: None")
-                print("Perfect number")
-            else:
-                print("Omitted factors:", solution)
-        print("\n")
