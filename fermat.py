@@ -11,9 +11,9 @@ fermat_primes = [3, 5, 17, 257, 65537]
 for num in re.findall(r"Number:\s*(\d+)", text):
     num = int(num)
     divisible = False
-    for fermat_num in fermat_primes:
-        if num % fermat_num == 0:
-            print(num, "%", fermat_num, "= 0")
+    for fermat_prime in fermat_primes:
+        if num % fermat_prime == 0:
+            print(num, "/", fermat_prime, "=", num // fermat_prime)
             divisible = True
     if divisible == False:
         print(num, ": None", sep="")
