@@ -29,9 +29,9 @@ print(mersenne_primes)
 for num in re.findall(r"Number:\s*(\d+)", text):
     num = int(num)
     divisible = False
-    for mersenne_num in mersenne_primes:
-        if num % mersenne_num == 0:
-            print(num, "%", mersenne_num, "= 0")
+    for mersenne_prime in mersenne_primes:
+        if num % mersenne_prime == 0:
+            print(num, "/", mersenne_prime, "=", num // mersenne_prime)
             divisible = True
     if divisible == False:
         print(num, ": None", sep="")
